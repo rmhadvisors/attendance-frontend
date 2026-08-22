@@ -1,4 +1,4 @@
-const CACHE_NAME = "glr-attendance-pwa-v4"
+const CACHE_NAME = "glr-attendance-pwa-v5"
 
 const APP_SHELL = [
   "/",
@@ -11,17 +11,7 @@ const APP_SHELL = [
 ]
 
 const API_PREFIXES = [
-  "/auth",
-  "/dashboard",
-  "/employees",
-  "/attendance",
-  "/face",
-  "/locations",
-  "/export",
-  "/company",
-  "/leave",
-  "/payroll",
-  "/push"
+  "/api"
 ]
 
 
