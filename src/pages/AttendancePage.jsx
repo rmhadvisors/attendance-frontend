@@ -16,16 +16,16 @@ const getISTComponents = () => {
   };
   const formatter = new Intl.DateTimeFormat("en-US", options);
   const parts = formatter.formatToParts(new Date());
-  
+
   const partMap = {};
   parts.forEach(p => partMap[p.type] = p.value);
-  
+
   const year = parseInt(partMap.year, 10);
   const month = parseInt(partMap.month, 10); // 1-indexed
   const day = parseInt(partMap.day, 10);
-  
+
   const pad = (num) => String(num).padStart(2, "0");
-  
+
   return {
     year,
     month,
@@ -128,16 +128,16 @@ function AttendancePage() {
   const handleOverrideClick = (record) => {
     setSelectedRecord(record)
     setOverrideData({ day_status: record.day_status || "present", admin_note: "" })
-    
+
     const pad = (n) => String(n).padStart(2, "0")
-    
+
     if (record.checkin_time) {
       const date = new Date(record.checkin_time)
       setManualCheckinTime(`${pad(date.getHours())}:${pad(date.getMinutes())}`)
     } else {
       setManualCheckinTime("09:00")
     }
-    
+
     if (record.checkout_time) {
       const date = new Date(record.checkout_time)
       setManualCheckoutTime(`${pad(date.getHours())}:${pad(date.getMinutes())}`)
@@ -148,7 +148,7 @@ function AttendancePage() {
 
   const handleOverrideSubmit = async (e) => {
     e.preventDefault()
-    
+
     setSubmitting(true)
     try {
       const payload = { ...overrideData }
@@ -187,9 +187,9 @@ function AttendancePage() {
             <h2 className="text-2xl font-bold text-gray-950">Daily Attendance</h2>
             <p className="text-sm text-gray-500">Viewing records for {formatDate(selectedDate)}</p>
           </div>
-          
+
           <div className="flex items-center gap-3">
-            <input 
+            <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
@@ -264,7 +264,7 @@ function AttendancePage() {
                             title="View Check-In Photo"
                           >
                             <img
-                              src={`/attendance/photo?path=${encodeURIComponent(record.checkin_photo_url)}`}
+                              src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(record.checkin_photo_url)}`}
                               alt="Check-in"
                               className="h-full w-full object-cover transition duration-200 group-hover:scale-110"
                               onError={(e) => { e.target.style.display = 'none'; }}
@@ -284,7 +284,7 @@ function AttendancePage() {
                             title="View Check-Out Photo"
                           >
                             <img
-                              src={`/attendance/photo?path=${encodeURIComponent(record.checkout_photo_url)}`}
+                              src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(record.checkout_photo_url)}`}
                               alt="Check-out"
                               className="h-full w-full object-cover transition duration-200 group-hover:scale-110"
                               onError={(e) => { e.target.style.display = 'none'; }}
@@ -300,7 +300,7 @@ function AttendancePage() {
                     </td>
                     <td className="p-4">
                       {record.checkin_lat ? (
-                        <a 
+                        <a
                           href={`https://www.google.com/maps?q=${record.checkin_lat},${record.checkin_lng}`}
                           target="_blank"
                           rel="noreferrer"
@@ -494,7 +494,7 @@ function AttendancePage() {
                       <span className="block text-gray-450 font-medium mb-1">Selfie</span>
                       <div className="h-28 w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
                         <img
-                          src={`/attendance/photo?path=${encodeURIComponent(selectedDetailRecord.checkin_photo_url)}`}
+                          src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(selectedDetailRecord.checkin_photo_url)}`}
                           alt="Check-in verification"
                           className="h-full w-full object-cover"
                           onError={(e) => { e.target.style.display = 'none'; }}
@@ -567,7 +567,7 @@ function AttendancePage() {
                       <span className="block text-gray-450 font-medium mb-1">Selfie</span>
                       <div className="h-28 w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
                         <img
-                          src={`/attendance/photo?path=${encodeURIComponent(selectedDetailRecord.checkout_photo_url)}`}
+                          src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(selectedDetailRecord.checkout_photo_url)}`}
                           alt="Check-out verification"
                           className="h-full w-full object-cover"
                           onError={(e) => { e.target.style.display = 'none'; }}
@@ -594,7 +594,7 @@ function AttendancePage() {
 
       {/* Lightbox Modal */}
       {lightboxPhoto && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
           onClick={() => setLightboxPhoto(null)}
         >

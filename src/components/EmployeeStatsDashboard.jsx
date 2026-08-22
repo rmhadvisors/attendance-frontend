@@ -15,16 +15,16 @@ const getISTComponents = () => {
   };
   const formatter = new Intl.DateTimeFormat("en-US", options);
   const parts = formatter.formatToParts(new Date());
-  
+
   const partMap = {};
   parts.forEach(p => partMap[p.type] = p.value);
-  
+
   const year = parseInt(partMap.year, 10);
   const month = parseInt(partMap.month, 10); // 1-indexed
   const day = parseInt(partMap.day, 10);
-  
+
   const pad = (num) => String(num).padStart(2, "0");
-  
+
   return {
     year,
     month,
@@ -342,14 +342,13 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                         <h4 className="text-sm font-bold uppercase tracking-wider text-gray-900">Details for {formatDate(selectedDate)}</h4>
                       </div>
                       {stats.single_day_detail && (
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase ${
-                          stats.single_day_detail.day_status === "full_day" ? "bg-emerald-100 text-emerald-700" :
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase ${stats.single_day_detail.day_status === "full_day" ? "bg-emerald-100 text-emerald-700" :
                           stats.single_day_detail.day_status === "half_day" ? "bg-amber-100 text-amber-700" :
-                          stats.single_day_detail.day_status === "holiday_work" ? "bg-purple-100 text-purple-700" :
-                          stats.single_day_detail.day_status === "comp_off_leave" ? "bg-indigo-100 text-indigo-700" :
-                          stats.single_day_detail.day_status === "holiday" ? "bg-blue-100 text-blue-700" :
-                          "bg-gray-100 text-gray-700"
-                        }`}>
+                            stats.single_day_detail.day_status === "holiday_work" ? "bg-purple-100 text-purple-700" :
+                              stats.single_day_detail.day_status === "comp_off_leave" ? "bg-indigo-100 text-indigo-700" :
+                                stats.single_day_detail.day_status === "holiday" ? "bg-blue-100 text-blue-700" :
+                                  "bg-gray-100 text-gray-700"
+                          }`}>
                           {stats.single_day_detail.day_status.replaceAll("_", " ")}
                         </span>
                       )}
@@ -419,7 +418,7 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                             {stats.single_day_detail.checkin_photo_url ? (
                               <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
                                 <img
-                                  src={`/attendance/photo?path=${encodeURIComponent(stats.single_day_detail.checkin_photo_url)}`}
+                                  src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(stats.single_day_detail.checkin_photo_url)}`}
                                   alt="Check In Selfie"
                                   className="h-24 w-full object-cover transition duration-300 hover:scale-105"
                                   onError={(e) => {
@@ -440,7 +439,7 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                             {stats.single_day_detail.checkout_photo_url ? (
                               <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
                                 <img
-                                  src={`/attendance/photo?path=${encodeURIComponent(stats.single_day_detail.checkout_photo_url)}`}
+                                  src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(stats.single_day_detail.checkout_photo_url)}`}
                                   alt="Check Out Selfie"
                                   className="h-24 w-full object-cover transition duration-300 hover:scale-105"
                                   onError={(e) => {
