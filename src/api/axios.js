@@ -2,7 +2,7 @@ import axios from "axios"
 
 const api = axios.create({
   // Use relative path in production so Vercel proxies it (solves iOS Safari Mixed Content & CORS blocking)
-  baseURL: import.meta.env.DEV ? (import.meta.env.VITE_API_BASE_URL || "") : "", 
+  baseURL: import.meta.env.DEV ? (import.meta.env.VITE_API_BASE_URL || "") : "/api",
   withCredentials: true, // send cookies
   timeout: 45000
 })
