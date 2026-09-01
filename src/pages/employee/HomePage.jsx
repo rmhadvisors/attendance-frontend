@@ -113,7 +113,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [action, setAction] = useState(null)   // 'checkin' | 'checkout'
   const [step, setStep] = useState("idle")     // idle | camera | note | gps | submitting
-  const [countdown, setCountdown] = useState(null)
   const [note, setNote] = useState("")
   const [mood, setMood] = useState("neutral")
   const [moodNote, setMoodNote] = useState("")
@@ -282,26 +281,6 @@ export default function HomePage() {
     }
   }
 
-  // Auto-capture logic
-  useEffect(() => {
-    let timer
-    if (step === "camera") {
-      setCountdown(3)
-      timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer)
-            // Need a slight delay to allow state to settle before capturing
-            setTimeout(captureAndProceed, 0)
-            return null
-          }
-          return prev - 1
-        })
-      }, 1000)
-    }
-    return () => clearInterval(timer)
-  }, [step])
-
   const captureAndProceed = () => {
     const video = videoRef.current
     const canvas = canvasRef.current
@@ -369,22 +348,11 @@ export default function HomePage() {
             Position your face within the oval
           </p>
 
-          {/* Auto-capture Countdown Overlay */}
-          {countdown !== null && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none">
-              <span className="text-7xl font-bold text-white drop-shadow-lg animate-pulse">{countdown}</span>
-              <span className="mt-4 text-lg font-semibold text-white drop-shadow-md">Auto-capturing...</span>
-            </div>
-          )}
-
           {/* Manual Capture Button */}
           <div className="absolute bottom-8 left-0 right-0 px-6 z-20">
             <button
-              onClick={() => {
-                setCountdown(null)
-                captureAndProceed()
-              }}
-              className="w-full rounded-2xl bg-emerald-500/90 backdrop-blur py-4 text-base font-bold text-white shadow-lg"
+              onClick={captureAndProceed}
+              className="w-full rounded-2xl bg-emerald-500/90 backdrop-blur py-4 text-base font-bold text-white shadow-lg transition active:scale-[0.98] hover:bg-emerald-600"
             >
               Capture Now
             </button>
