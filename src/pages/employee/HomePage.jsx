@@ -626,28 +626,26 @@ export default function HomePage() {
         {/* Action buttons */}
         {!loading && (
           <div className="space-y-3">
-            {(!today || !today.is_checked_in) && (
-              <>
-                {today && (
-                  <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                    <span className="relative flex h-3 w-3">
-                      <span className="relative inline-flex h-3 w-3 rounded-full bg-gray-400" />
-                    </span>
-                    <p className="text-sm font-semibold text-gray-600">
-                      Currently checked out • {formatHours(today.total_hours)} worked today
-                    </p>
-                  </div>
-                )}
-                <button
-                  onClick={() => startFlow("checkin")}
-                  className="w-full rounded-2xl bg-emerald-600 py-5 text-lg font-bold text-white shadow-md transition hover:bg-emerald-700 active:scale-95"
-                >
-                  {today ? "CHECK IN AGAIN" : "CHECK IN"}
-                </button>
-              </>
-            )}
-
-            {today && today.is_checked_in && (
+            {today && today.checkout_time && !today.is_checked_in ? (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 text-center shadow-sm">
+                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-base font-bold text-emerald-950">Shift Completed for Today</p>
+                <p className="text-xs text-emerald-700 mt-1">
+                  Checked out at {formatTime(today.checkout_time)} • {formatHours(today.total_hours)} worked
+                </p>
+              </div>
+            ) : !today || !today.is_checked_in ? (
+              <button
+                onClick={() => startFlow("checkin")}
+                className="w-full rounded-2xl bg-emerald-600 py-5 text-lg font-bold text-white shadow-md transition hover:bg-emerald-700 active:scale-95"
+              >
+                CHECK IN
+              </button>
+            ) : (
               <>
                 <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
                   <span className="relative flex h-3 w-3">
