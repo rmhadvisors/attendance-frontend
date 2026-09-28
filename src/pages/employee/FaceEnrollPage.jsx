@@ -153,7 +153,7 @@ function FaceEnrollPage() {
                 autoPlay
                 playsInline
                 muted
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover -scale-x-100"
               />
               {/* Face oval guide */}
               <div className="absolute inset-0 flex items-center justify-center">

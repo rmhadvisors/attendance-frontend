@@ -337,7 +337,7 @@ export default function HomePage() {
         </div>
 
         <div className="relative flex-1 overflow-hidden bg-black flex flex-col justify-center">
-          <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 h-full w-full object-cover" />
+          <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 h-full w-full object-cover -scale-x-100" />
 
           {/* Face oval guide */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
