@@ -8,26 +8,56 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Verify cookie is valid by hitting /auth/me
-    api.get("/auth/me")
-      .then((res) => {
-        if (!res.data || typeof res.data !== "object" || !res.data.role) {
+    let isMounted = true
+
+    const verifyAuthWithRetry = async (retriesLeft = 3, delayMs = 1500) => {
+      try {
+        const res = await api.get("/auth/me")
+
+        if (!isMounted) return
+
+        if (res.data && typeof res.data === "object" && res.data.role) {
+          setUser(res.data)
+          localStorage.setItem("name", res.data.name || "")
+          localStorage.setItem("role", res.data.role || "")
+          localStorage.setItem("employee_id", res.data.employee_id || "")
+        } else {
           throw new Error("Invalid auth response")
         }
+      } catch (err) {
+        if (!isMounted) return
 
-        setUser(res.data)
-        // Keep display values in sync with server
-        localStorage.setItem("name", res.data.name)
-        localStorage.setItem("role", res.data.role)
-        localStorage.setItem("employee_id", res.data.employee_id)
-      })
-      .catch(() => {
-        setUser(null)
-        localStorage.removeItem("name")
-        localStorage.removeItem("role")
-        localStorage.removeItem("employee_id")
-      })
-      .finally(() => setLoading(false))
+        // 1. If explicitly 401 Unauthorized, the session/token is truly expired -> wipe and logout
+        if (err.response && err.response.status === 401) {
+          setUser(null)
+          localStorage.removeItem("name")
+          localStorage.removeItem("role")
+          localStorage.removeItem("employee_id")
+          return
+        }
+
+        // 2. If it's a server cold-start, timeout, or temporary network blip -> retry
+        if (retriesLeft > 0) {
+          await new Promise((resolve) => setTimeout(resolve, delayMs))
+          return verifyAuthWithRetry(retriesLeft - 1, delayMs * 1.5)
+        }
+
+        // 3. Exhausted all retries without a 401 (e.g. completely offline or severe outage)
+        // Only clear if no existing role was cached
+        const cachedRole = localStorage.getItem("role")
+        if (!cachedRole) {
+          setUser(null)
+        }
+      }
+    }
+
+    verifyAuthWithRetry().finally(() => {
+      if (isMounted) setLoading(false)
+    })
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const login = (userData) => {
