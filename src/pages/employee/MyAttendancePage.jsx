@@ -111,7 +111,7 @@ export default function MyAttendancePage() {
 
   return (
     <EmployeeLayout>
-      <div className="mx-auto max-w-md space-y-5 pb-10">
+      <div className={`mx-auto space-y-5 pb-10 ${view === "stats" ? "max-w-md lg:max-w-5xl" : view === "payroll" ? "max-w-md lg:max-w-3xl" : "max-w-md md:max-w-2xl"}`}>
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-950">My Attendance</h2>
           <div className="flex gap-1 rounded-xl bg-gray-100 p-1">

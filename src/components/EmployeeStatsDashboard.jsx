@@ -140,38 +140,38 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
     <div className="space-y-6">
       {/* Filters Bar */}
       <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-3">
-            <div>
+        <div className="grid grid-cols-2 gap-3 sm:flex sm:items-end sm:gap-4">
+          <div className="contents">
+            <div className="min-w-0">
               <label className="mb-1 block text-[10px] font-bold uppercase text-gray-400">Year</label>
               <select
                 value={year}
                 onChange={(e) => updateSelectedYearMonth(Number(e.target.value), month)}
-                className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 outline-none transition focus:border-emerald-500 focus:bg-white"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-semibold text-gray-700 outline-none transition focus:border-emerald-500 focus:bg-white"
               >
                 {years.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="mb-1 block text-[10px] font-bold uppercase text-gray-400">Month</label>
               <select
                 value={month}
                 onChange={(e) => updateSelectedYearMonth(year, Number(e.target.value))}
-                className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 outline-none transition focus:border-emerald-500 focus:bg-white"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-semibold text-gray-700 outline-none transition focus:border-emerald-500 focus:bg-white"
               >
                 {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
             </div>
           </div>
 
-          <div>
-            <label className="mb-1 block text-[10px] font-bold uppercase text-gray-400">Select Date for Single Day Details</label>
+          <div className="col-span-2 min-w-0 sm:col-span-1 sm:ml-auto">
+            <label className="mb-1 block text-[10px] font-bold uppercase text-gray-400">Date for day details</label>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-700 outline-none transition focus:border-emerald-500 focus:bg-white w-full sm:w-auto"
+              className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-semibold text-gray-700 outline-none transition focus:border-emerald-500 focus:bg-white w-full sm:w-auto"
             />
           </div>
         </div>
@@ -190,11 +190,11 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
       ) : (
         stats && (
           <div className="space-y-6">
-            {user_id && (
-              <div className="rounded-xl bg-gray-50 p-4 border border-gray-100 flex justify-between items-center">
+            {(user_id || stats.employee_id) && (
+              <div className="rounded-2xl bg-gradient-to-r from-emerald-50 to-white p-4 border border-emerald-100 flex justify-between items-center gap-3">
                 <div>
                   <h3 className="text-base font-bold text-gray-900">{stats.employee_name}</h3>
-                  <p className="text-xs text-gray-500">{stats.employee_id}</p>
+                  <p className="mt-0.5 font-mono text-xs font-semibold text-emerald-700">ID: {stats.employee_id}</p>
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 rounded-full px-3 py-1">
@@ -205,25 +205,23 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
             )}
 
             {/* Dashboard grid */}
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               {/* Year Summary Card */}
               <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5">
                   <span className="text-xl">📅</span>
                   <h4 className="text-sm font-bold uppercase tracking-wider text-gray-400">Yearly Summary ({stats.query_year})</h4>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div className="grid grid-cols-2 gap-3 pt-1">
                   <div className="rounded-xl bg-gray-50 p-4 border border-gray-100 flex flex-col justify-center">
                     <p className="text-2xl font-black text-gray-900">
-                      {stats.yearly_stats.worked_days}{" "}
-                      <span className="text-xs font-semibold text-gray-400 block sm:inline">
-                        worked out of {stats.yearly_stats.total_working_days} working days
-                      </span>
+                      {stats.yearly_stats.worked_days}
+                      <span className="text-sm font-semibold text-gray-400"> / {stats.yearly_stats.total_working_days}</span>
                     </p>
                     <p className="text-[10px] font-bold uppercase text-gray-400 mt-1">Days Worked</p>
                   </div>
                   <div className="rounded-xl bg-gray-50 p-4 border border-gray-100">
-                    <p className="text-2xl font-black text-emerald-600">
+                    <p className="text-xl sm:text-2xl font-black text-emerald-600">
                       {formatHours(stats.yearly_stats.avg_hours ?? 0)}
                     </p>
                     <p className="text-[10px] font-bold uppercase text-gray-400 mt-1">Avg Hours/Day</p>
@@ -239,18 +237,16 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                     Monthly Summary ({months.find(m => m.value === stats.query_month)?.label})
                   </h4>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div className="grid grid-cols-2 gap-3 pt-1">
                   <div className="rounded-xl bg-gray-50 p-4 border border-gray-100 flex flex-col justify-center">
                     <p className="text-2xl font-black text-gray-900">
-                      {stats.monthly_stats.worked_days}{" "}
-                      <span className="text-xs font-semibold text-gray-400 block sm:inline">
-                        worked out of {stats.monthly_stats.total_working_days} working days
-                      </span>
+                      {stats.monthly_stats.worked_days}
+                      <span className="text-sm font-semibold text-gray-400"> / {stats.monthly_stats.total_working_days}</span>
                     </p>
                     <p className="text-[10px] font-bold uppercase text-gray-400 mt-1">Days Worked</p>
                   </div>
                   <div className="rounded-xl bg-gray-50 p-4 border border-gray-100">
-                    <p className="text-2xl font-black text-emerald-600">
+                    <p className="text-xl sm:text-2xl font-black text-emerald-600">
                       {formatHours(stats.monthly_stats.avg_hours ?? 0)}
                     </p>
                     <p className="text-[10px] font-bold uppercase text-gray-400 mt-1">Avg Hours/Day</p>
@@ -262,7 +258,7 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
             {/* Monthly Breakdowns */}
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
               <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">Monthly Day-Status Breakdown</h4>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 pt-2">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 pt-1">
                 {[
                   { label: "Full Day", value: stats.monthly_stats.breakdown.full_day, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
                   { label: "Half Day", value: stats.monthly_stats.breakdown.half_day, color: "bg-amber-50 text-amber-700 border-amber-100" },
@@ -270,23 +266,23 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                   { label: "Comp-Off Leave", value: stats.monthly_stats.breakdown.comp_off_leave, color: "bg-indigo-50 text-indigo-700 border-indigo-100" },
                   { label: "Present", value: stats.monthly_stats.breakdown.present, color: "bg-blue-50 text-blue-700 border-blue-100" }
                 ].map((item) => (
-                  <div key={item.label} className={`rounded-xl border p-4 text-center ${item.color}`}>
+                  <div key={item.label} className={`rounded-xl border p-3 text-center last:odd:col-span-2 sm:last:odd:col-span-1 ${item.color}`}>
                     <p className="text-2xl font-black">{item.value}</p>
-                    <p className="text-[9px] font-bold uppercase mt-1 tracking-tight">{item.label}</p>
+                    <p className="text-[10px] font-bold uppercase mt-1 tracking-tight">{item.label}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Interactive Calendar & Single Day Details Grid */}
-            <div className="grid gap-6 lg:grid-cols-3">
+            <div className="grid gap-5 lg:grid-cols-5">
               {/* Calendar Card */}
-              <div className="lg:col-span-2 space-y-4">
+              <div className="lg:col-span-3 space-y-4">
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
                     <div className="flex items-center gap-2.5">
                       <span className="text-xl">📅</span>
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-gray-900">Attendance Calendar</h4>
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-gray-900">Calendar</h4>
                     </div>
                     {/* Calendar Month Pager */}
                     <div className="flex items-center gap-2">
@@ -333,13 +329,13 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
               </div>
 
               {/* Single Day Detail Card */}
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-2">
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-4 h-full flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">📌</span>
-                        <h4 className="text-sm font-bold uppercase tracking-wider text-gray-900">Details for {formatDate(selectedDate)}</h4>
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">📌 Day details</p>
+                        <h4 className="text-sm font-bold text-gray-900">{formatDate(selectedDate)}</h4>
                       </div>
                       {stats.single_day_detail && (
                         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase ${stats.single_day_detail.day_status === "full_day" ? "bg-emerald-100 text-emerald-700" :
@@ -369,7 +365,7 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                           </div>
                         ) : (
                           <>
-                            <div className="grid gap-3 grid-cols-1">
+                            <div className="grid gap-3 grid-cols-2">
                               <div className="rounded-xl bg-gray-50 p-3.5 border border-gray-100">
                                 <p className="text-[10px] font-bold uppercase text-gray-400">Check In</p>
                                 <p className="text-sm font-bold text-gray-900 mt-0.5">{formatTime(stats.single_day_detail.checkin_time)}</p>
@@ -382,7 +378,7 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                                 <p className="text-[9px] font-bold uppercase text-gray-400 mt-0.5">{stats.single_day_detail.checkout_status || "-"}</p>
                               </div>
 
-                              <div className="rounded-xl bg-gray-50 p-3.5 border border-gray-100">
+                              <div className="col-span-2 rounded-xl bg-gray-50 p-3.5 border border-gray-100">
                                 <p className="text-[10px] font-bold uppercase text-gray-400">Hours Worked</p>
                                 <p className="text-sm font-bold text-emerald-600 mt-0.5">
                                   {stats.single_day_detail.total_hours ? formatHours(stats.single_day_detail.total_hours) : "--"}
@@ -414,13 +410,13 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                         {/* Verification Photos */}
                         <div className="grid gap-3 grid-cols-2">
                           <div>
-                            <p className="text-[9px] font-bold uppercase text-gray-400 mb-1">Check In Selfie</p>
+                            <p className="text-[10px] font-bold uppercase text-gray-400 mb-1.5">Check In Selfie</p>
                             {stats.single_day_detail.checkin_photo_url ? (
                               <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
                                 <img
                                   src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(stats.single_day_detail.checkin_photo_url)}`}
                                   alt="Check In Selfie"
-                                  className="h-24 w-full object-cover transition duration-300 hover:scale-105"
+                                  className="aspect-[3/4] w-full object-cover"
                                   onError={(e) => {
                                     e.target.onerror = null
                                     e.target.src = "https://images.unsplash.com/photo-1579202673506-ca3ce28943ef?w=400"
@@ -428,20 +424,20 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                                 />
                               </div>
                             ) : (
-                              <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-gray-300 text-[9px] font-semibold text-gray-400 bg-gray-50">
+                              <div className="flex aspect-[3/4] items-center justify-center rounded-xl border border-dashed border-gray-300 text-[9px] font-semibold text-gray-400 bg-gray-50">
                                 No photo
                               </div>
                             )}
                           </div>
 
                           <div>
-                            <p className="text-[9px] font-bold uppercase text-gray-400 mb-1">Check Out Selfie</p>
+                            <p className="text-[10px] font-bold uppercase text-gray-400 mb-1.5">Check Out Selfie</p>
                             {stats.single_day_detail.checkout_photo_url ? (
                               <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
                                 <img
                                   src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(stats.single_day_detail.checkout_photo_url)}`}
                                   alt="Check Out Selfie"
-                                  className="h-24 w-full object-cover transition duration-300 hover:scale-105"
+                                  className="aspect-[3/4] w-full object-cover"
                                   onError={(e) => {
                                     e.target.onerror = null
                                     e.target.src = "https://images.unsplash.com/photo-1579202673506-ca3ce28943ef?w=400"
@@ -449,7 +445,7 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                                 />
                               </div>
                             ) : (
-                              <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-gray-300 text-[9px] font-semibold text-gray-400 bg-gray-50">
+                              <div className="flex aspect-[3/4] items-center justify-center rounded-xl border border-dashed border-gray-300 text-[9px] font-semibold text-gray-400 bg-gray-50">
                                 No photo
                               </div>
                             )}

@@ -52,7 +52,7 @@ function MyLeavePage() {
 
   return (
     <EmployeeLayout>
-      <div className="mx-auto max-w-md space-y-6">
+      <div className="mx-auto max-w-md space-y-6 md:max-w-2xl">
         <h2 className="text-2xl font-bold text-gray-950">Leave & Comp-Off</h2>
 
         {/* Balance Card */}

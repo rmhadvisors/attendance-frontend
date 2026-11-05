@@ -120,14 +120,14 @@ function AdminLayout({ children }) {
               </h1>
             </div>
 
-            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm">
+            <div className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm shadow-sm">
               <span className="font-semibold text-gray-900">{name}</span>
               <span className="ml-2 text-gray-500">({role})</span>
             </div>
           </div>
         </header>
 
-        <main className="p-6 lg:p-8">
+        <main className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>

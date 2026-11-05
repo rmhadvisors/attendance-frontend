@@ -488,19 +488,24 @@ export default function HomePage() {
 
   return (
     <EmployeeLayout>
-      <div className="mx-auto max-w-md space-y-5">
+      <div className="mx-auto max-w-md space-y-5 md:max-w-2xl">
         {/* Date + greeting */}
-        <div>
-          <p className="text-xs font-semibold uppercase text-gray-400">{todayStr}</p>
-          <div className="flex items-center justify-between">
-            {/* <h1 className="text-2xl font-bold text-gray-900">Mangalam</h1> */}
-            <h2 className="mt-1 text-2xl font-bold text-gray-950">
-              Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 17 ? "Afternoon" : "Evening"},{" "}
-              {user?.name?.split(" ")[0]}
-            </h2>
+        <div className="rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 p-5 text-white shadow-md">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-100">{todayStr}</p>
+          <h2 className="mt-1 text-2xl font-bold leading-tight">
+            Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 17 ? "Afternoon" : "Evening"},{" "}
+            {user?.name?.split(" ")[0]}
+          </h2>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {(user?.employee_id || localStorage.getItem("employee_id")) && (
+              <span className="rounded-full bg-white/15 px-3 py-1 font-mono text-xs font-semibold ring-1 ring-white/25">
+                ID: {user?.employee_id || localStorage.getItem("employee_id")}
+              </span>
+            )}
             {user?.allow_remote_checkin && (
-              <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700 border border-indigo-200">
-                🌐 Remote Allowed
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/15 px-3 py-1 text-xs font-semibold ring-1 ring-white/25">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-200" />
+                Remote check-in allowed
               </span>
             )}
           </div>
@@ -529,28 +534,30 @@ export default function HomePage() {
 
         {/* Today status card */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-gray-400 mb-4">Today&apos;s Attendance</p>
+          <p className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-400">Today&apos;s Attendance</p>
 
           {loading ? (
             <p className="text-sm text-gray-400">Loading…</p>
           ) : (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">Check In</p>
-                <p className="text-sm font-semibold text-gray-900">{formatTime(today?.checkin_time)}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700/70">Check In</p>
+                  <p className="mt-1 text-lg font-bold text-gray-900">{formatTime(today?.checkin_time)}</p>
+                </div>
+                <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-700/70">Check Out</p>
+                  <p className="mt-1 text-lg font-bold text-gray-900">{formatTime(today?.checkout_time)}</p>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">Check Out</p>
-                <p className="text-sm font-semibold text-gray-900">{formatTime(today?.checkout_time)}</p>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">Hours</p>
-                <p className="text-sm font-semibold text-gray-900">
+              <div className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
+                <p className="text-sm text-gray-500">Hours worked</p>
+                <p className="text-sm font-bold text-gray-900">
                   {today?.total_hours ? formatHours(today.total_hours) : "--"}
                 </p>
               </div>
               {today?.checkin_status && (
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between px-1">
                   <p className="text-sm text-gray-500">Status</p>
                   <StatusBadge status={today.day_status || today.checkin_status} />
                 </div>

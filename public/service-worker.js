@@ -1,4 +1,4 @@
-const CACHE_NAME = "glr-attendance-pwa-v6"
+const CACHE_NAME = "glr-attendance-pwa-v7"
 
 const APP_SHELL = [
   "/",
