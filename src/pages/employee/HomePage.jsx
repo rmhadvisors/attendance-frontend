@@ -93,7 +93,7 @@ function StatusBadge({ status }) {
 }
 
 export default function HomePage() {
-  const { user } = useAuth()
+  const { user, setUser } = useAuth()
   const navigate = useNavigate()
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
@@ -144,6 +144,7 @@ export default function HomePage() {
         preferred_checkin_time: preferredTime,
         enable_checkin_reminder: enableReminder
       })
+      if (user) setUser({ ...user, preferred_checkin_time: preferredTime, enable_checkin_reminder: enableReminder })
       setSuccessMsg("Check-in reminder preference saved!")
       setTimeout(() => setSuccessMsg(""), 4000)
     } catch (err) {
@@ -329,7 +330,7 @@ export default function HomePage() {
     return (
       <div className="fixed inset-0 z-50 flex flex-col bg-black h-[100dvh]">
         <div className="flex items-center justify-between p-4">
-          <button onClick={cancel} className="text-white/80 text-sm font-semibold">Cancel</button>
+          <button onClick={cancel} className="rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold text-white ring-1 ring-white/25 backdrop-blur-sm hover:bg-white/25">Cancel</button>
           <p className="text-white text-sm font-semibold">
             {action === "checkin" ? "Face Check-In" : "Face Check-Out"}
           </p>
@@ -370,7 +371,7 @@ export default function HomePage() {
     return (
       <div className="fixed inset-0 z-50 flex flex-col bg-[#f6f7f9] h-[100dvh]">
         <div className="flex items-center justify-between border-b border-gray-200 bg-white px-5 py-4">
-          <button onClick={cancel} className="text-sm font-semibold text-gray-500">Cancel</button>
+          <button onClick={cancel} className="rounded-full bg-gray-100 px-4 py-1.5 text-sm font-semibold text-gray-600 hover:bg-gray-200">Cancel</button>
           <p className="text-sm font-bold text-gray-900">
             {action === "checkin" ? "Check In" : "Check Out"}
           </p>
@@ -473,7 +474,11 @@ export default function HomePage() {
           <button
             onClick={submit}
             disabled={step === "submitting"}
-            className="w-full rounded-xl bg-emerald-600 py-4 text-base font-bold text-white transition hover:bg-emerald-700 disabled:bg-emerald-300"
+            className={`w-full rounded-xl bg-gradient-to-r py-4 text-base font-extrabold text-white shadow-lg transition disabled:from-gray-300 disabled:to-gray-300 disabled:shadow-none ${
+              action === "checkin"
+                ? "from-emerald-500 to-teal-600 shadow-emerald-500/30"
+                : "from-orange-500 to-rose-600 shadow-rose-500/30"
+            }`}
           >
             {step === "submitting" ? "Submitting…" : action === "checkin" ? "Confirm Check In" : "Confirm Check Out"}
           </button>
@@ -568,40 +573,74 @@ export default function HomePage() {
 
         {/* Check-In Reminder Card */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-gray-900">⏰ Check-In Reminder</h3>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={enableReminder}
-                onChange={(e) => setEnableReminder(e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
+          <div className="flex items-center gap-3">
+            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition ${enableReminder ? "bg-emerald-100 text-emerald-600" : "bg-gray-100 text-gray-400"}`}>
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 11-6 0" />
+              </svg>
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-bold text-gray-900">Check-In Reminder</h3>
+              <p className="text-xs text-gray-500">
+                {enableReminder ? "We'll nudge you if you haven't checked in" : "Reminders are turned off"}
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={enableReminder}
+              aria-label="Toggle check-in reminder"
+              onClick={() => setEnableReminder(v => !v)}
+              className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${enableReminder ? "bg-emerald-600" : "bg-gray-300"}`}
+            >
+              <span className={`absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${enableReminder ? "translate-x-5" : "translate-x-0"}`} />
+            </button>
           </div>
 
-          {enableReminder && (
-            <div className="space-y-3">
-              <label className="block text-xs font-semibold text-gray-500">
-                Preferred Check-In Time (Reminder sent 30 mins after)
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="time"
-                  value={preferredTime}
-                  onChange={(e) => setPreferredTime(e.target.value)}
-                  className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-emerald-500 outline-none"
-                />
-                <button
-                  onClick={handleSavePreferences}
-                  disabled={savingPref}
-                  className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:bg-emerald-300"
-                >
-                  {savingPref ? "Saving..." : "Save Time"}
-                </button>
+          {enableReminder && (() => {
+            const [hh, mm] = (preferredTime || "09:00").split(":").map(Number)
+            const total = (hh * 60 + mm + 30) % (24 * 60)
+            const remindAt = new Date(2000, 0, 1, Math.floor(total / 60), total % 60)
+              .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+            const savedTime = user?.preferred_checkin_time || "09:00"
+            const savedEnabled = user?.enable_checkin_reminder ?? true
+            const dirty = preferredTime !== savedTime || enableReminder !== savedEnabled
+            return (
+              <div className="space-y-3 rounded-xl bg-gray-50 p-4">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                  Preferred check-in time
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="time"
+                    value={preferredTime}
+                    onChange={(e) => setPreferredTime(e.target.value)}
+                    className="flex-1 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-base font-semibold text-gray-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  />
+                  <button
+                    onClick={handleSavePreferences}
+                    disabled={savingPref || !dirty}
+                    className="rounded-xl bg-emerald-600 px-5 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
+                  >
+                    {savingPref ? "Saving..." : dirty ? "Save" : "Saved"}
+                  </button>
+                </div>
+                <p className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Reminder will be sent at <span className="font-bold text-gray-700">{remindAt}</span> (30 mins after)
+                </p>
               </div>
-            </div>
+            )
+          })()}
+
+          {!enableReminder && (user?.enable_checkin_reminder ?? true) && (
+            <button
+              onClick={handleSavePreferences}
+              disabled={savingPref}
+              className="w-full rounded-xl bg-gray-900 py-2.5 text-xs font-bold text-white transition hover:bg-gray-800 disabled:bg-gray-300"
+            >
+              {savingPref ? "Saving..." : "Save – turn reminders off"}
+            </button>
           )}
         </div>
 
@@ -648,8 +687,11 @@ export default function HomePage() {
             ) : !today || !today.is_checked_in ? (
               <button
                 onClick={() => startFlow("checkin")}
-                className="w-full rounded-2xl bg-emerald-600 py-5 text-lg font-bold text-white shadow-md transition hover:bg-emerald-700 active:scale-95"
+                className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-5 text-lg font-extrabold tracking-wide text-white shadow-lg shadow-emerald-500/30 transition hover:from-emerald-600 hover:to-teal-700"
               >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
                 CHECK IN
               </button>
             ) : (
@@ -665,8 +707,11 @@ export default function HomePage() {
                 </div>
                 <button
                   onClick={() => startFlow("checkout")}
-                  className="w-full rounded-2xl border-2 border-gray-900 bg-white py-5 text-lg font-bold text-gray-900 shadow-sm transition hover:bg-gray-50 active:scale-95"
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-orange-500 to-rose-600 py-5 text-lg font-extrabold tracking-wide text-white shadow-lg shadow-rose-500/30 transition hover:from-orange-600 hover:to-rose-700"
                 >
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
                   CHECK OUT
                 </button>
               </>

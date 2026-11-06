@@ -41,6 +41,72 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
+/* ───────── Buttons: consistent polish across the whole app ───────── */
+button {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.12s ease,
+    filter 0.18s ease,
+    opacity 0.18s ease;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Tactile press feedback */
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* Subtle lift on hover (mouse devices only) */
+@media (hover: hover) {
+  button:not(:disabled):hover {
+    filter: brightness(1.04);
+  }
+}
+
+/* Soft colored glow on solid action buttons */
+button[class*="bg-emerald-600"]:not(:disabled),
+button[class*="bg-emerald-500"]:not(:disabled) {
+  box-shadow: 0 1px 2px rgb(5 150 105 / 0.25), 0 6px 16px -6px rgb(5 150 105 / 0.45);
+}
+button[class*="bg-gray-900"]:not(:disabled),
+button[class*="bg-gray-950"]:not(:disabled) {
+  box-shadow: 0 1px 2px rgb(16 24 40 / 0.2), 0 6px 16px -6px rgb(16 24 40 / 0.4);
+}
+button[class*="bg-red-600"]:not(:disabled),
+button[class*="bg-red-500"]:not(:disabled) {
+  box-shadow: 0 1px 2px rgb(220 38 38 / 0.25), 0 6px 16px -6px rgb(220 38 38 / 0.45);
+}
+button[class*="bg-blue-600"]:not(:disabled),
+button[class*="bg-indigo-600"]:not(:disabled) {
+  box-shadow: 0 1px 2px rgb(37 99 235 / 0.25), 0 6px 16px -6px rgb(37 99 235 / 0.45);
+}
+
+/* Soft buttons (light tinted backgrounds) get a gentle hover shadow */
+@media (hover: hover) {
+  button[class*="bg-emerald-100"]:not(:disabled):hover,
+  button[class*="bg-red-100"]:not(:disabled):hover,
+  button[class*="bg-blue-100"]:not(:disabled):hover,
+  button[class*="bg-amber-100"]:not(:disabled):hover {
+    box-shadow: 0 4px 12px -4px rgb(16 24 40 / 0.18);
+  }
+}
+
+/* Disabled buttons look clearly inactive */
+button:disabled {
+  box-shadow: none;
+  opacity: 0.85;
+}
+
 /* Page fade-in */
 main {
   animation: page-in 0.3s ease both;

@@ -69,6 +69,8 @@ function LeaveRequestsPage() {
                     <td className="p-4">
                       {new Date(req.start_date).toLocaleDateString()} 
                       {req.start_date !== req.end_date && ` to ${new Date(req.end_date).toLocaleDateString()}`}
+                      {req.leave_type === "first_half" && <span className="ml-2 rounded bg-indigo-100 px-2 py-0.5 text-xs font-bold text-indigo-700">First Half</span>}
+                      {req.leave_type === "second_half" && <span className="ml-2 rounded bg-indigo-100 px-2 py-0.5 text-xs font-bold text-indigo-700">Second Half</span>}
                     </td>
                     <td className="p-4 text-gray-600 max-w-xs truncate" title={req.reason}>{req.reason}</td>
                     <td className="p-4">
