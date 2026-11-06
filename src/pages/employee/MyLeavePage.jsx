@@ -224,21 +224,25 @@ function MyLeavePage() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4" onClick={closeModal}>
           <div
-            className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white p-6 shadow-2xl sm:max-w-md sm:rounded-3xl"
+            className="flex max-h-[92dvh] w-full flex-col rounded-t-3xl bg-white shadow-2xl sm:max-w-md sm:rounded-3xl"
             onClick={e => e.stopPropagation()}
           >
-            <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-gray-200 sm:hidden" />
-            <div className="mb-5 flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-extrabold text-gray-950">Request Leave</h3>
-                <p className="text-xs text-gray-500">Your admin will review the request</p>
+            <div className="shrink-0 px-5 pt-3 sm:px-6 sm:pt-6">
+              <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-gray-200 sm:hidden" />
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-extrabold text-gray-950">Request Leave</h3>
+                  <p className="text-xs text-gray-500">Your admin will review the request</p>
+                </div>
+                <button type="button" onClick={closeModal} className="rounded-full bg-gray-100 p-2 text-gray-500 transition hover:bg-gray-200">
+                  <Icon name="close" className="h-4 w-4" />
+                </button>
               </div>
-              <button type="button" onClick={closeModal} className="rounded-full bg-gray-100 p-2 text-gray-500 transition hover:bg-gray-200">
-                <Icon name="close" className="h-4 w-4" />
-              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+              {/* Scrollable fields */}
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-4 sm:px-6">
               {/* Leave type */}
               <div>
                 <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">Leave Type</label>
@@ -338,13 +342,16 @@ function MyLeavePage() {
                   maxLength={280}
                   value={form.reason}
                   onChange={e => setForm({ ...form, reason: e.target.value })}
-                  rows={3}
+                  rows={2}
                   className={`${inputCls} resize-none`}
                   placeholder="Vacation, medical appointment..."
                 />
                 <p className="mt-1 text-right text-[11px] text-gray-400">{form.reason.length}/280</p>
               </div>
+              </div>
 
+              {/* Footer: always visible, no scrolling needed */}
+              <div className="shrink-0 space-y-2 border-t border-gray-100 bg-white px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:rounded-b-3xl sm:px-6 sm:pb-5">
               {formError && <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">{formError}</p>}
 
               <div className="flex gap-3">
@@ -354,6 +361,7 @@ function MyLeavePage() {
                 <button type="submit" disabled={submitting} className="flex-1 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:from-gray-300 disabled:to-gray-300 disabled:shadow-none">
                   {submitting ? "Sending..." : "Submit Request"}
                 </button>
+              </div>
               </div>
             </form>
           </div>
