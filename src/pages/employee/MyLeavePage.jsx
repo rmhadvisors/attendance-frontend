@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import EmployeeLayout from "../../layouts/EmployeeLayout"
 import api, { getApiErrorMessage } from "../../api/axios"
 
@@ -221,8 +222,8 @@ function MyLeavePage() {
       </div>
 
       {/* Modal / bottom sheet */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4" onClick={closeModal}>
+      {showModal && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4" onClick={closeModal}>
           <div
             className="flex max-h-[92dvh] w-full flex-col rounded-t-3xl bg-white shadow-2xl sm:max-w-md sm:rounded-3xl"
             onClick={e => e.stopPropagation()}
@@ -365,7 +366,8 @@ function MyLeavePage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </EmployeeLayout>
   )
