@@ -129,7 +129,7 @@ export default function EmployeePayrollSlip() {
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-5">
           <div className="border-b border-gray-100 pb-3 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">GLR Attendance Slip</h3>
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">RMH Attendance Slip</h3>
               <p className="text-[10px] font-bold text-gray-400 uppercase mt-0.5">
                 {months.find(m => m.value === month)?.label} {year}
               </p>
@@ -144,10 +144,11 @@ export default function EmployeePayrollSlip() {
             <div className="rounded-xl bg-emerald-50/50 p-4 border border-emerald-100 text-center">
               <p className="text-[10px] font-bold uppercase text-emerald-700 tracking-wider">Estimated Net Payout</p>
               <p className="text-3xl font-black text-emerald-600 mt-1">
-                ₹{slip.calculated_salary ? slip.calculated_salary.toLocaleString("en-IN") : "0.00"}
+                ₹{(slip.net_salary ?? slip.calculated_salary) ? (slip.net_salary ?? slip.calculated_salary).toLocaleString("en-IN") : "0.00"}
               </p>
               <p className="text-[9px] text-gray-400 font-semibold uppercase mt-1">
                 Based on {slip.total_paid_days} paid days out of {slip.total_working_days} days (Fixed Month)
+                {(slip.adjustments_added > 0 || slip.adjustments_deducted > 0) ? " plus adjustments" : ""}
               </p>
             </div>
 
@@ -191,12 +192,35 @@ export default function EmployeePayrollSlip() {
               </div>
             </div>
 
+            {/* Manual additions / deductions added by the admin */}
+            {Array.isArray(slip.adjustments) && slip.adjustments.length > 0 && (
+              <div className="rounded-xl border border-gray-100 bg-white">
+                <div className="flex justify-between items-center px-4 py-3 border-b border-gray-100">
+                  <span className="text-xs font-bold text-gray-400 uppercase">Salary for attendance</span>
+                  <span className="text-sm font-black text-gray-900">
+                    ₹{(slip.calculated_salary || 0).toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <ul className="divide-y divide-gray-100">
+                  {slip.adjustments.map((item, i) => (
+                    <li key={i} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                      <span className="min-w-0 break-words text-xs font-semibold text-gray-700">{item.reason}</span>
+                      <span className={`shrink-0 text-sm font-black ${item.kind === "addition" ? "text-emerald-700" : "text-red-600"}`}>
+                        {item.kind === "addition" ? "+" : "−"} ₹{item.amount.toLocaleString("en-IN")}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Salary calculation description */}
             <div className="rounded-xl border border-dashed border-gray-200 p-4 text-[10px] text-gray-400 font-semibold leading-relaxed space-y-1">
               <p className="uppercase tracking-wider text-gray-900">💡 Calculation Logic</p>
               <p>1. Your base monthly salary is decided first by the administrator.</p>
-              <p>2. Calculated Salary = ((Base Monthly Salary / 30.0) * Paid Billing Days) * 0.99 [1% TDS Deducted].</p>
-              <p>3. Paid Billing Days = 30.0 - (Absent Days / Half Days on expected working days). Weekends and configured holidays are fully paid!</p>
+              <p>2. Calculated Salary = ((Base Monthly Salary / 30.0) * Paid Billing Days).</p>
+              <p>3. Paid Billing Days = 30.0 - (Absent Days / Half Days on expected working days). Weekends and configured holidays are paid, as long as you worked (or had paid leave) on at least one day in the month.</p>
+              <p>4. Net Payout = Calculated Salary + manual additions (e.g. bonus) − manual deductions (e.g. advance), as added by the administrator.</p>
             </div>
           </div>
         </div>

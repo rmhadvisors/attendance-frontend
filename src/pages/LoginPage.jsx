@@ -87,9 +87,9 @@ function LoginPage() {
           <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10" />
           <div className="pointer-events-none absolute -bottom-12 left-6 h-32 w-32 rounded-full bg-white/10" />
           <div className="relative mx-auto flex max-w-md items-center gap-3">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-white/15 text-sm font-extrabold ring-1 ring-white/30">GLR</div>
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-white/15 text-sm font-extrabold ring-1 ring-white/30">RMH</div>
             <div>
-              <p className="text-lg font-bold leading-tight">GLR Attendance</p>
+              <p className="text-lg font-bold leading-tight">RMH Attendance</p>
               <p className="text-xs text-emerald-100">Check in. Track. Done.</p>
             </div>
           </div>
@@ -99,7 +99,7 @@ function LoginPage() {
           <div className="w-full max-w-md rounded-3xl border border-gray-100 bg-white p-7 shadow-xl shadow-gray-900/5 sm:p-9">
             <div className="mb-8">
               <h1 className="text-3xl font-extrabold tracking-tight text-gray-950">Welcome back</h1>
-              <p className="mt-2 text-sm text-gray-500">Sign in to access your GLR Attendance workspace.</p>
+              <p className="mt-2 text-sm text-gray-500">Sign in to access your RMH Attendance workspace.</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-5">

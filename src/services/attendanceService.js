@@ -30,3 +30,28 @@ export const overrideAttendance = async (id, data) => {
   const response = await api.put(`/attendance/${id}/override`, data)
   return response.data
 }
+
+export const givePaidLeave = async (data) => {
+  const response = await api.post("/attendance/paid-leave", data)
+  return response.data
+}
+
+export const getPaidLeaves = async () => {
+  const response = await api.get("/attendance/paid-leaves")
+  return response.data
+}
+
+export const removePaidLeave = async (id) => {
+  const response = await api.delete(`/attendance/paid-leave/${id}`)
+  return response.data
+}
+
+export const getRegularizationQuota = async () => {
+  const response = await api.get("/attendance/regularization-quota")
+  return response.data
+}
+
+export const regularizeAttendance = async (data) => {
+  const response = await api.post("/attendance/regularize", data)
+  return response.data
+}

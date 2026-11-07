@@ -2,6 +2,9 @@ import { useEffect, useState } from "react"
 import AdminLayout from "../layouts/AdminLayout"
 import { getAllAttendance, overrideAttendance } from "../services/attendanceService"
 import { getApiErrorMessage } from "../api/axios"
+import { createPortal } from "react-dom"
+import ModalShell from "../components/ModalShell"
+import SelfieImage from "../components/SelfieImage"
 
 const getISTComponents = () => {
   const options = {
@@ -64,6 +67,7 @@ function formatHours(value) {
 
 function formatStatus(value) {
   if (!value) return "-"
+  if (value === "comp_off_leave") return "Paid Leave"
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
@@ -83,6 +87,7 @@ function getStatusClass(value) {
   if (["full_day", "on_time", "on_time_out", "present"].includes(status)) return "bg-green-100 text-green-700"
   if (["half_day", "late", "early_leave"].includes(status)) return "bg-yellow-100 text-yellow-800"
   if (["absent"].includes(status)) return "bg-red-100 text-red-700"
+  if (status === "comp_off_leave") return "bg-violet-100 text-violet-700"
   return "bg-gray-100 text-gray-700"
 }
 
@@ -152,7 +157,7 @@ function AttendancePage() {
     setSubmitting(true)
     try {
       const payload = { ...overrideData }
-      if (overrideData.day_status !== "absent") {
+      if (!["absent", "comp_off_leave"].includes(overrideData.day_status)) {
         if (overrideData.day_status === "present" && !manualCheckinTime) {
           payload.checkin_time = null
         } else {
@@ -188,7 +193,7 @@ function AttendancePage() {
             <p className="text-sm text-gray-500">Viewing records for {formatDate(selectedDate)}</p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <input
               type="date"
               value={selectedDate}
@@ -244,7 +249,13 @@ function AttendancePage() {
                     <td className="p-4 text-sm text-gray-600">{formatDate(record.date)}</td>
                     <td className="p-4">
                       <div className="text-sm font-medium text-gray-900">{formatTimeOnly(record.checkin_time)}</div>
-                      <div className="text-[10px] text-gray-400 font-semibold uppercase">{record.checkin_status}</div>
+                      {record.checkin_status === "late" ? (
+                        <span className="mt-0.5 inline-flex rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-700">
+                          Late
+                        </span>
+                      ) : (
+                        <div className="text-[10px] text-gray-400 font-semibold uppercase">{record.checkin_status}</div>
+                      )}
                     </td>
                     <td className="p-4">
                       <div className="text-sm font-medium text-gray-900">{formatTimeOnly(record.checkout_time)}</div>
@@ -266,6 +277,7 @@ function AttendancePage() {
                             <img
                               src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(record.checkin_photo_url)}`}
                               alt="Check-in"
+                              style={{ transform: "scaleX(-1)" }}
                               className="h-full w-full object-cover transition duration-200 group-hover:scale-110"
                               onError={(e) => { e.target.style.display = 'none'; }}
                             />
@@ -286,6 +298,7 @@ function AttendancePage() {
                             <img
                               src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(record.checkout_photo_url)}`}
                               alt="Check-out"
+                              style={{ transform: "scaleX(-1)" }}
                               className="h-full w-full object-cover transition duration-200 group-hover:scale-110"
                               onError={(e) => { e.target.style.display = 'none'; }}
                             />
@@ -319,12 +332,18 @@ function AttendancePage() {
                         >
                           View Details
                         </button>
-                        <button
-                          onClick={() => handleOverrideClick(record)}
-                          className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-200 transition"
-                        >
-                          Override
-                        </button>
+                        {record.day_status === "comp_off_leave" ? (
+                          <span className="self-center text-[11px] font-semibold text-emerald-600">
+                            Paid leave — manage in Leave Requests
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleOverrideClick(record)}
+                            className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-200 transition"
+                          >
+                            Override
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -337,8 +356,8 @@ function AttendancePage() {
 
       {/* Override Modal */}
       {selectedRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <ModalShell onClose={() => setSelectedRecord(null)} disableClose={submitting}>
+          <div className="p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6">
             <h3 className="text-xl font-bold text-gray-950">Manual Override</h3>
             <p className="mt-1 text-sm text-gray-500">
               Modifying attendance for <b>{selectedRecord.employee_name}</b> on {formatDate(selectedRecord.date)}
@@ -360,9 +379,9 @@ function AttendancePage() {
                 </select>
               </div>
 
-              {overrideData.day_status !== "absent" && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
+              {!["absent", "comp_off_leave"].includes(overrideData.day_status) && (
+                <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2">
+                  <div className="min-w-0">
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                       Check-In Time {overrideData.day_status === "present" ? "(Optional)" : "(Required)"}
                     </label>
@@ -374,7 +393,7 @@ function AttendancePage() {
                       className="w-full rounded-xl border border-gray-300 px-3 py-3 text-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition font-semibold"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                       Check-Out Time {overrideData.day_status === "present" ? "(Optional)" : "(Required)"}
                     </label>
@@ -418,13 +437,13 @@ function AttendancePage() {
               </div>
             </form>
           </div>
-        </div>
+        </ModalShell>
       )}
 
       {/* Details View Modal */}
       {selectedDetailRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <ModalShell onClose={() => setSelectedDetailRecord(null)} maxWidth="sm:max-w-lg">
+          <div className="space-y-6 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <div>
                 <h3 className="text-xl font-bold text-gray-950">Attendance Details</h3>
@@ -442,7 +461,7 @@ function AttendancePage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {/* Check-In Details Card */}
               <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 space-y-4">
                 <div className="flex items-center gap-2 border-b border-gray-150 pb-2">
@@ -496,6 +515,7 @@ function AttendancePage() {
                         <img
                           src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(selectedDetailRecord.checkin_photo_url)}`}
                           alt="Check-in verification"
+                          style={{ transform: "scaleX(-1)" }}
                           className="h-full w-full object-cover"
                           onError={(e) => { e.target.style.display = 'none'; }}
                         />
@@ -569,6 +589,7 @@ function AttendancePage() {
                         <img
                           src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(selectedDetailRecord.checkout_photo_url)}`}
                           alt="Check-out verification"
+                          style={{ transform: "scaleX(-1)" }}
                           className="h-full w-full object-cover"
                           onError={(e) => { e.target.style.display = 'none'; }}
                         />
@@ -589,13 +610,13 @@ function AttendancePage() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalShell>
       )}
 
       {/* Lightbox Modal */}
-      {lightboxPhoto && (
+      {lightboxPhoto && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
           onClick={() => setLightboxPhoto(null)}
         >
           <div className="relative max-w-lg w-full rounded-2xl overflow-hidden bg-white p-2 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -607,20 +628,19 @@ function AttendancePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <img
-              src={`/attendance/photo?path=${encodeURIComponent(lightboxPhoto)}`}
+            <SelfieImage
+              key={lightboxPhoto}
+              src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(lightboxPhoto)}`}
               alt="Verification selfie"
               className="w-full max-h-[75vh] object-contain rounded-xl"
-              onError={(e) => {
-                e.target.onerror = null
-                e.target.src = "https://images.unsplash.com/photo-1579202673506-ca3ce28943ef?w=600"
-              }}
+              fallbackClassName="min-h-[240px] w-full rounded-xl"
             />
             <p className="mt-2 text-center text-xs font-bold uppercase text-gray-400 py-1">
               Verification Photo Detail
             </p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </AdminLayout>
   )

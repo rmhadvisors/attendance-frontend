@@ -1,3 +1,4 @@
+import SelfieImage from "./SelfieImage"
 import { useEffect, useState } from "react"
 import api, { getApiErrorMessage } from "../api/axios"
 import AttendanceCalendar from "./AttendanceCalendar"
@@ -73,6 +74,14 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
   }, [initialDate])
 
   const updateSelectedYearMonth = (newYear, newMonth) => {
+    // Clamp to joining month if a pre-joining period is chosen (e.g. via year dropdown)
+    if (stats?.joining_date) {
+      const [jy, jm] = stats.joining_date.split("-").map(Number)
+      if (newYear * 12 + newMonth < jy * 12 + jm) {
+        newYear = jy
+        newMonth = jm
+      }
+    }
     setYear(newYear)
     setMonth(newMonth)
     const pad = (num) => String(num).padStart(2, "0")
@@ -108,7 +117,15 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
     fetchStats()
   }, [year, month, selectedDate, user_id])
 
+  // Don't show periods before the employee joined
+  const joinParts = stats?.joining_date ? stats.joining_date.split("-").map(Number) : null
+  const joinYear = joinParts ? joinParts[0] : null
+  const joinMonth = joinParts ? joinParts[1] : null
+  const canGoPrev = !joinParts || (year * 12 + month) > (joinYear * 12 + joinMonth)
+  const isMonthBeforeJoin = (y, m) => !!joinParts && (y * 12 + m) < (joinYear * 12 + joinMonth)
+
   const years = Array.from({ length: 5 }, (_, i) => ist.year - i)
+    .filter((y) => !joinParts || y >= joinYear || y === year)
   const months = [
     { value: 1, label: "January" },
     { value: 2, label: "February" },
@@ -160,7 +177,9 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                 onChange={(e) => updateSelectedYearMonth(year, Number(e.target.value))}
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-semibold text-gray-700 outline-none transition focus:border-emerald-500 focus:bg-white"
               >
-                {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                {months.map((m) => (
+                  <option key={m.value} value={m.value} disabled={isMonthBeforeJoin(year, m.value)}>{m.label}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -263,7 +282,7 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                   { label: "Full Day", value: stats.monthly_stats.breakdown.full_day, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
                   { label: "Half Day", value: stats.monthly_stats.breakdown.half_day, color: "bg-amber-50 text-amber-700 border-amber-100" },
                   { label: "Holiday Work", value: stats.monthly_stats.breakdown.holiday_work, color: "bg-purple-50 text-purple-700 border-purple-100" },
-                  { label: "Comp-Off Leave", value: stats.monthly_stats.breakdown.comp_off_leave, color: "bg-indigo-50 text-indigo-700 border-indigo-100" },
+                  { label: "Paid Leave", value: stats.monthly_stats.breakdown.comp_off_leave, color: "bg-violet-50 text-violet-700 border-violet-100" },
                   { label: "Present", value: stats.monthly_stats.breakdown.present, color: "bg-blue-50 text-blue-700 border-blue-100" }
                 ].map((item) => (
                   <div key={item.label} className={`rounded-xl border p-3 text-center last:odd:col-span-2 sm:last:odd:col-span-1 ${item.color}`}>
@@ -288,10 +307,12 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => {
+                          if (!canGoPrev) return
                           const prev = new Date(year, month - 2, 1)
                           updateSelectedYearMonth(prev.getFullYear(), prev.getMonth() + 1)
                         }}
-                        className="rounded-lg p-1.5 hover:bg-gray-100 text-gray-600 transition"
+                        disabled={!canGoPrev}
+                        className="rounded-lg p-1.5 hover:bg-gray-100 text-gray-600 transition disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                         title="Previous Month"
                       >
                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -341,11 +362,11 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase ${stats.single_day_detail.day_status === "full_day" ? "bg-emerald-100 text-emerald-700" :
                           stats.single_day_detail.day_status === "half_day" ? "bg-amber-100 text-amber-700" :
                             stats.single_day_detail.day_status === "holiday_work" ? "bg-purple-100 text-purple-700" :
-                              stats.single_day_detail.day_status === "comp_off_leave" ? "bg-indigo-100 text-indigo-700" :
+                              stats.single_day_detail.day_status === "comp_off_leave" ? "bg-violet-100 text-violet-700" :
                                 stats.single_day_detail.day_status === "holiday" ? "bg-blue-100 text-blue-700" :
                                   "bg-gray-100 text-gray-700"
                           }`}>
-                          {stats.single_day_detail.day_status.replaceAll("_", " ")}
+                          {stats.single_day_detail.day_status === "comp_off_leave" ? "paid leave" : stats.single_day_detail.day_status.replaceAll("_", " ")}
                         </span>
                       )}
                     </div>
@@ -413,14 +434,11 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                             <p className="text-[10px] font-bold uppercase text-gray-400 mb-1.5">Check In Selfie</p>
                             {stats.single_day_detail.checkin_photo_url ? (
                               <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
-                                <img
+                                <SelfieImage
+                                  key={stats.single_day_detail.checkin_photo_url}
                                   src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(stats.single_day_detail.checkin_photo_url)}`}
                                   alt="Check In Selfie"
                                   className="aspect-[3/4] w-full object-cover"
-                                  onError={(e) => {
-                                    e.target.onerror = null
-                                    e.target.src = "https://images.unsplash.com/photo-1579202673506-ca3ce28943ef?w=400"
-                                  }}
                                 />
                               </div>
                             ) : (
@@ -434,14 +452,11 @@ export default function EmployeeStatsDashboard({ user_id = null, initialDate = n
                             <p className="text-[10px] font-bold uppercase text-gray-400 mb-1.5">Check Out Selfie</p>
                             {stats.single_day_detail.checkout_photo_url ? (
                               <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
-                                <img
+                                <SelfieImage
+                                  key={stats.single_day_detail.checkout_photo_url}
                                   src={`${import.meta.env.DEV ? "" : "/api"}/attendance/photo?path=${encodeURIComponent(stats.single_day_detail.checkout_photo_url)}`}
                                   alt="Check Out Selfie"
                                   className="aspect-[3/4] w-full object-cover"
-                                  onError={(e) => {
-                                    e.target.onerror = null
-                                    e.target.src = "https://images.unsplash.com/photo-1579202673506-ca3ce28943ef?w=400"
-                                  }}
                                 />
                               </div>
                             ) : (

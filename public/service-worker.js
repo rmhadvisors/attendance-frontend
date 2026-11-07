@@ -1,4 +1,4 @@
-const CACHE_NAME = "glr-attendance-pwa-v9"
+const CACHE_NAME = "rmh-attendance-pwa-v13"
 
 const APP_SHELL = [
   "/",
@@ -135,8 +135,30 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: "no-store" })
         .catch(() => caches.match("/index.html"))
+    )
+    return
+  }
+
+  // Only content-hashed build assets and static icons are safe to serve cache-first.
+  const isImmutableAsset = isSameOrigin && (
+    url.pathname.startsWith("/assets/") ||
+    url.pathname.startsWith("/icons/")
+  )
+
+  if (!isImmutableAsset) {
+    // Everything else (source modules in dev, manifest, etc.): network first, cache as offline fallback.
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (isSameOrigin && response && response.status === 200) {
+            const responseClone = response.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone))
+          }
+          return response
+        })
+        .catch(() => caches.match(request))
     )
     return
   }
@@ -144,7 +166,7 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(request)
       .then((cached) => cached || fetch(request).then((response) => {
-        if (!isSameOrigin || !response || response.status !== 200) {
+        if (!response || response.status !== 200) {
           return response
         }
 

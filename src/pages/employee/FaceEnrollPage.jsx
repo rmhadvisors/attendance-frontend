@@ -104,7 +104,7 @@ function FaceEnrollPage() {
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-emerald-600 text-lg font-bold text-white">
-            GLR
+            RMH
           </div>
           <h1 className="text-2xl font-bold text-gray-950">Face Enrollment</h1>
           <p className="mt-2 text-sm text-gray-500">
@@ -174,7 +174,7 @@ function FaceEnrollPage() {
         {step === "preview" && (
           <div className="space-y-5">
             <div className="overflow-hidden rounded-2xl shadow-lg">
-              <img src={capturedPhoto} alt="Captured face" className="w-full object-cover" />
+              <img src={capturedPhoto} alt="Captured face" className="w-full object-cover" style={{ transform: "scaleX(-1)" }} />
             </div>
 
             {error && (

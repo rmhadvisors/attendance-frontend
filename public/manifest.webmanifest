@@ -1,6 +1,6 @@
 {
-  "name": "GLR Attendance",
-  "short_name": "GLR Attendance",
+  "name": "RMH Attendance",
+  "short_name": "RMH Attendance",
   "description": "Employee attendance, face verification, leave, and reporting.",
   "start_url": "/",
   "scope": "/",

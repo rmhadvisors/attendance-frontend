@@ -73,10 +73,108 @@ function formatHours(value) {
   return `${finalHrs} hrs ${finalMins} mins`
 }
 
+// 8.5 -> "8h 30m"
+function formatHM(value) {
+  const total = Number(value ?? 0)
+  let hrs = Math.floor(total)
+  let mins = Math.round((total - hrs) * 60)
+  if (mins === 60) {
+    hrs += 1
+    mins = 0
+  }
+  return mins === 0 ? `${hrs}h` : `${hrs}h ${mins}m`
+}
+
+// Look of the "Shift Completed" card, depending on how the day ended
+const SHIFT_TONES = {
+  full_day: {
+    border: "border-emerald-200", bg: "from-emerald-50 via-white to-teal-50", badge: "from-emerald-500 to-teal-600",
+    glow: "shadow-emerald-500/30", ring: "ring-emerald-100", bar: "from-emerald-400 to-teal-500",
+    text: "text-emerald-700", blob: "bg-emerald-200/60", line: "Full day done. Great work!",
+  },
+  holiday_work: {
+    border: "border-purple-200", bg: "from-purple-50 via-white to-fuchsia-50", badge: "from-purple-500 to-fuchsia-600",
+    glow: "shadow-purple-500/30", ring: "ring-purple-100", bar: "from-purple-400 to-fuchsia-500",
+    text: "text-purple-700", blob: "bg-purple-200/60", line: "Thanks for working on your day off!",
+  },
+  half_day: {
+    border: "border-amber-200", bg: "from-amber-50 via-white to-orange-50", badge: "from-amber-400 to-orange-500",
+    glow: "shadow-amber-500/30", ring: "ring-amber-100", bar: "from-amber-400 to-orange-500",
+    text: "text-amber-700", blob: "bg-amber-200/60", line: "Half day completed.",
+  },
+  absent: {
+    border: "border-red-200", bg: "from-red-50 via-white to-rose-50", badge: "from-red-400 to-rose-500",
+    glow: "shadow-red-500/30", ring: "ring-red-100", bar: "from-red-400 to-rose-500",
+    text: "text-red-700", blob: "bg-red-200/60", line: "Under 5 hours, so today is marked absent.",
+  },
+}
+
+function ShiftCompletedCard({ today, fullDayHours }) {
+  const tone = SHIFT_TONES[today.day_status] || SHIFT_TONES.full_day
+  const hours = Number(today.total_hours || 0)
+  const pct = Math.min(100, (hours / fullDayHours) * 100)
+  const halfTick = Math.min(100, (5 / fullDayHours) * 100)
+  const isAbsent = today.day_status === "absent"
+
+  return (
+    <div className={`relative overflow-hidden rounded-2xl border ${tone.border} bg-gradient-to-br ${tone.bg} p-5 text-center shadow-sm`}>
+      <div className={`pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full ${tone.blob} blur-2xl`} />
+      <div className={`pointer-events-none absolute -bottom-10 -left-8 h-28 w-28 rounded-full ${tone.blob} blur-2xl`} />
+
+      <div className="relative">
+        <div className={`mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br ${tone.badge} text-white shadow-lg ${tone.glow} ring-8 ${tone.ring}`}>
+          {isAbsent ? (
+            <svg className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
+            </svg>
+          ) : (
+            <svg className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
+
+        <p className="text-lg font-extrabold tracking-tight text-gray-950">Shift Completed for Today</p>
+        <p className={`mt-1 text-xs font-semibold ${tone.text}`}>{tone.line}</p>
+
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/80 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm">
+            <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Checked out {formatTime(today.checkout_time)}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/80 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm">
+            <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            {formatHM(hours)} worked
+          </span>
+        </div>
+
+        {/* Progress toward a full day, with the half-day mark */}
+        <div className="mt-5 text-left">
+          <div className="relative h-2.5 overflow-hidden rounded-full bg-white/90 ring-1 ring-black/5">
+            <div className={`h-full rounded-full bg-gradient-to-r ${tone.bar} transition-all`} style={{ width: `${pct}%` }} />
+            <span className="absolute inset-y-0 w-px bg-gray-400/70" style={{ left: `${halfTick}%` }} />
+          </div>
+          <div className="mt-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+            <span>Half day · 5h</span>
+            <span>Full day · {formatHM(fullDayHours)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function StatusBadge({ status }) {
   const map = {
     full_day: { label: "Full Day", cls: "bg-emerald-100 text-emerald-700" },
     half_day: { label: "Half Day", cls: "bg-amber-100 text-amber-700" },
+    absent: { label: "Absent", cls: "bg-red-100 text-red-700" },
+    holiday_work: { label: "Holiday Work", cls: "bg-purple-100 text-purple-700" },
+    comp_off_leave: { label: "Paid Leave", cls: "bg-violet-100 text-violet-700" },
     present: { label: "Present", cls: "bg-blue-100 text-blue-700" },
     on_time: { label: "On Time", cls: "bg-emerald-100 text-emerald-700" },
     late: { label: "Late", cls: "bg-amber-100 text-amber-700" },
@@ -382,7 +480,7 @@ export default function HomePage() {
           {/* Photo preview */}
           {capturedPhoto && (
             <div className="overflow-hidden rounded-2xl shadow-sm">
-              <img src={capturedPhoto} alt="Your selfie" className="w-full object-cover" style={{ maxHeight: 200 }} />
+              <img src={capturedPhoto} alt="Your selfie" className="w-full object-cover" style={{ maxHeight: 200, transform: "scaleX(-1)" }} />
             </div>
           )}
 
@@ -654,7 +752,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <div className="space-y-1">
-                <h4 className="text-sm font-bold text-gray-950">Install GLR Mobile App</h4>
+                <h4 className="text-sm font-bold text-gray-950">Install RMH Mobile App</h4>
                 <p className="text-xs text-gray-500 leading-relaxed">
                   Add this app to your Home Screen for quick, one-tap face check-in and live attendance updates.
                 </p>
@@ -673,17 +771,10 @@ export default function HomePage() {
         {!loading && (
           <div className="space-y-3">
             {today && today.checkout_time && !today.is_checked_in ? (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 text-center shadow-sm">
-                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                  <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <p className="text-base font-bold text-emerald-950">Shift Completed for Today</p>
-                <p className="text-xs text-emerald-700 mt-1">
-                  Checked out at {formatTime(today.checkout_time)} • {formatHours(today.total_hours)} worked
-                </p>
-              </div>
+              <ShiftCompletedCard
+                today={today}
+                fullDayHours={new Date().getDay() === 6 && user?.saturday_policy === "all_sat_half_day" ? 6.5 : 8.5}
+              />
             ) : !today || !today.is_checked_in ? (
               <button
                 onClick={() => startFlow("checkin")}

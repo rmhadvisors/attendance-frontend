@@ -6,7 +6,7 @@ const statusColors = {
   absent: "bg-red-500 text-white",
   holiday: "bg-blue-500 text-white",
   holiday_work: "bg-purple-500 text-white",
-  comp_off_leave: "bg-indigo-500 text-white",
+  comp_off_leave: "bg-violet-500 text-white", // shown as "Paid Leave"
 }
 
 export default function AttendanceCalendar({ records, holidays, currentDate, selectedDate = null, onSelectDate = null, saturdayPolicy = "alt_sat_holiday" }) {
@@ -143,6 +143,7 @@ export default function AttendanceCalendar({ records, holidays, currentDate, sel
           { label: "Half Day", color: "bg-amber-500" },
           { label: "Absent", color: "bg-red-500" },
           { label: "Holiday", color: "bg-blue-500" },
+          { label: "Paid Leave", color: "bg-violet-500" },
         ].map(l => (
           <div key={l.label} className="flex items-center gap-2">
             <div className={`h-2.5 w-2.5 rounded-full ${l.color}`} />
