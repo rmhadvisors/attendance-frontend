@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import EmployeeLayout from "../../layouts/EmployeeLayout"
-import { getMyHistory, getRegularizationQuota, regularizeAttendance } from "../../services/attendanceService"
+import { getMyHistory, getRegularizationQuota, regularizeAttendance, getMyRegularizations } from "../../services/attendanceService"
 import api, { getApiErrorMessage } from "../../api/axios"
 import AttendanceCalendar from "../../components/AttendanceCalendar"
 import EmployeeStatsDashboard from "../../components/EmployeeStatsDashboard"
@@ -79,9 +79,12 @@ export default function MyAttendancePage() {
   const [regForm, setRegForm] = useState({ date: "", checkin: "09:00", checkout: "18:00", note: "" })
   const [regError, setRegError] = useState("")
   const [regSubmitting, setRegSubmitting] = useState(false)
+  const [myRequests, setMyRequests] = useState([])
+  const [regNotice, setRegNotice] = useState("")
 
   const loadQuota = () => {
     getRegularizationQuota().then(setQuota).catch(() => setQuota(null))
+    getMyRegularizations().then(setMyRequests).catch(() => setMyRequests([]))
   }
   useEffect(() => { loadQuota() }, [])
 
@@ -128,18 +131,17 @@ export default function MyAttendancePage() {
     setRegError("")
     setRegSubmitting(true)
     try {
-      await regularizeAttendance({
+      const res = await regularizeAttendance({
         date: regForm.date,
         checkin_time: `${regForm.date}T${regForm.checkin}:00`,
         checkout_time: `${regForm.date}T${regForm.checkout}:00`,
         note: regForm.note,
       })
       setShowRegularize(false)
-      const fresh = await getMyHistory()
-      setRecords(fresh)
+      setRegNotice(res.message)
       loadQuota()
     } catch (err) {
-      setRegError(getApiErrorMessage(err, "Failed to regularize attendance"))
+      setRegError(getApiErrorMessage(err, "Failed to send the request"))
     } finally {
       setRegSubmitting(false)
     }
@@ -276,6 +278,7 @@ export default function MyAttendancePage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-gray-900">Wrong check-in/out time?</p>
+                <p className="text-[11px] text-gray-500">Send a request. Your admin approves it.</p>
                 <div className="mt-1.5 flex items-center gap-2">
                   <div className="flex gap-1">
                     {Array.from({ length: quota.limit }).map((_, i) => (
@@ -286,7 +289,7 @@ export default function MyAttendancePage() {
                     ))}
                   </div>
                   <span className="text-[11px] font-semibold text-gray-500">
-                    {quota.remaining} of {quota.limit} left this month
+                    {quota.remaining} of {quota.limit} left this month{quota.pending > 0 ? ` · ${quota.pending} waiting for approval` : ""}
                   </span>
                 </div>
               </div>
@@ -295,9 +298,43 @@ export default function MyAttendancePage() {
                 disabled={quotaExhausted}
                 className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-600/25 transition hover:bg-emerald-700 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
               >
-                {quotaExhausted ? "Limit reached" : "Regularize"}
+                {quotaExhausted ? "Limit reached" : "Request"}
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Notice + status of your correction requests */}
+        {!loading && !error && canRegularize && !["stats", "payroll"].includes(view) && (regNotice || myRequests.length > 0) && (
+          <div className="space-y-3">
+            {regNotice && (
+              <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800">{regNotice}</p>
+            )}
+            {myRequests.length > 0 && (
+              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">Your correction requests</p>
+                <ul className="divide-y divide-gray-100">
+                  {myRequests.slice(0, 5).map((r) => (
+                    <li key={r.id} className="flex items-start justify-between gap-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900">{formatDate(r.date)}</p>
+                        <p className="text-xs text-gray-500">
+                          {timeOf(r.original_checkin) || "--"}–{timeOf(r.original_checkout) || "--"} → {timeOf(r.requested_checkin)}–{timeOf(r.requested_checkout)}
+                        </p>
+                        {r.admin_note && <p className="mt-0.5 text-xs italic text-gray-500">Admin: “{r.admin_note}”</p>}
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                        r.status === "approved" ? "bg-emerald-100 text-emerald-700"
+                          : r.status === "rejected" ? "bg-red-100 text-red-700"
+                          : "bg-gray-100 text-gray-700"
+                      }`}>
+                        {r.status === "approved" ? "Approved" : r.status === "rejected" ? "Declined" : "Waiting"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
@@ -401,7 +438,7 @@ export default function MyAttendancePage() {
               </button>
               <h3 className="text-lg font-bold">Regularize Attendance</h3>
               <p className="mt-1 text-xs text-emerald-50">
-                Correct a wrong check-in or check-out time on a day you did check in (this or last month).
+                Ask to correct a wrong check-in or check-out time on a day you did check in. Your attendance changes only after your admin approves.
               </p>
               <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold">
                 <span className="flex gap-1">
@@ -409,7 +446,7 @@ export default function MyAttendancePage() {
                     <span key={i} className={`h-1.5 w-4 rounded-full ${i < (quota?.remaining ?? 0) ? "bg-white" : "bg-white/30"}`} />
                   ))}
                 </span>
-                {quota?.remaining ?? 0} left this month · uses 1
+                {quota?.remaining ?? 0} left this month · counts once sent
               </div>
             </div>
 
@@ -459,7 +496,7 @@ export default function MyAttendancePage() {
               {regPreview && (
                 <div className={`flex items-center justify-between rounded-xl border px-4 py-3 ${regPreview.cls}`}>
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">This will be saved as</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">If approved, this day becomes</p>
                     <p className="text-sm font-bold">{regPreview.label}</p>
                   </div>
                   <p className="text-sm font-bold">{regPreview.hours}</p>
@@ -494,7 +531,7 @@ export default function MyAttendancePage() {
                   type="submit" disabled={regSubmitting || eligibleDays.length === 0}
                   className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/25 transition hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
                 >
-                  {regSubmitting ? "Saving…" : "Submit"}
+                  {regSubmitting ? "Sending…" : "Send request"}
                 </button>
               </div>
             </div>

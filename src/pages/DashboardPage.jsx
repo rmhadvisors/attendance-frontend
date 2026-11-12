@@ -164,6 +164,24 @@ function DashboardPage() {
           </div>
         </section>
 
+        {stats && stats.pending_regularizations > 0 && (
+          <button
+            onClick={() => navigate("/regularize")}
+            className="flex w-full items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-left shadow-sm transition hover:bg-emerald-100/70"
+          >
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-600 text-white">
+              <Icon path="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.4-9.4a2 2 0 112.8 2.8L11.8 15H9v-2.8l8.6-8.6z" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold text-emerald-900">
+                {stats.pending_regularizations} regularization request{stats.pending_regularizations > 1 ? "s" : ""} waiting for your approval
+              </span>
+              <span className="block text-xs text-emerald-800/80">Review and approve or decline them.</span>
+            </span>
+            <Icon path={ICONS.arrow} className="h-4 w-4 shrink-0 text-emerald-700" />
+          </button>
+        )}
+
         {error && (
           <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {error}

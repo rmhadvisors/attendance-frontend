@@ -55,3 +55,18 @@ export const regularizeAttendance = async (data) => {
   const response = await api.post("/attendance/regularize", data)
   return response.data
 }
+
+export const getMyRegularizations = async () => {
+  const response = await api.get("/attendance/my-regularizations")
+  return response.data
+}
+
+export const getRegularizationRequests = async (status = "pending") => {
+  const response = await api.get(`/attendance/regularization-requests?status=${status}`)
+  return response.data
+}
+
+export const actionRegularization = async (id, data) => {
+  const response = await api.post(`/attendance/regularization-requests/${id}/action`, data)
+  return response.data
+}
