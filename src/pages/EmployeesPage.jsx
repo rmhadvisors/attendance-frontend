@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import AdminLayout from "../layouts/AdminLayout"
 import { getEmployees, deleteEmployee } from "../services/employeeService"
 import { getApiErrorMessage } from "../api/axios"
+import { downloadFile } from "../utils/downloadPdf"
 import EmployeeStatsDashboard from "../components/EmployeeStatsDashboard"
 import EmployeeFormModal from "../components/EmployeeFormModal"
 import ModalShell from "../components/ModalShell"
@@ -27,6 +28,7 @@ const ICONS = {
   edit: "M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z",
   trash: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16",
   close: "M6 18L18 6M6 6l12 12",
+  download: "M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4",
 }
 
 function Icon({ path, className = "h-4 w-4" }) {
@@ -108,6 +110,7 @@ function EmployeesPage() {
   const [editingEmployee, setEditingEmployee] = useState(null)
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
   const [query, setQuery] = useState("")
+  const [exporting, setExporting] = useState(false)
 
   const fetchEmployees = () => {
     setLoading(true)
@@ -120,6 +123,18 @@ function EmployeesPage() {
   useEffect(() => {
     fetchEmployees()
   }, [])
+
+  const handleExport = async () => {
+    setExporting(true)
+    setError("")
+    try {
+      await downloadFile("/export/employees/xlsx", "Employees.xlsx")
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to download the employee list"))
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const handleCreated = (newEmployee) => {
     setEmployees((prev) => [newEmployee, ...prev])
@@ -176,13 +191,23 @@ function EmployeesPage() {
             <h2 className="text-2xl font-black text-gray-950">Employees</h2>
             <p className="mt-1 text-sm text-gray-500">Manage your team, roles and work settings.</p>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-600/25 transition hover:bg-emerald-700"
-          >
-            <Icon path={ICONS.plus} className="h-4 w-4" />
-            Add Employee
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              onClick={handleExport}
+              disabled={exporting || loading}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
+            >
+              <Icon path={ICONS.download} className="h-4 w-4" />
+              {exporting ? "Preparing…" : "Download Excel"}
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-600/25 transition hover:bg-emerald-700"
+            >
+              <Icon path={ICONS.plus} className="h-4 w-4" />
+              Add Employee
+            </button>
+          </div>
         </div>
 
         {/* Quick counts */}
@@ -282,9 +307,9 @@ function EmployeesPage() {
                             <Pill tone={emp.role === "employee" ? "bg-gray-100 text-gray-700" : "bg-emerald-100 text-emerald-700"}>
                               {formatRole(emp.role)}
                             </Pill>
-                            {(emp.designation || emp.department) && (
+                            {(emp.designation || emp.department || emp.employment_type === "part_time") && (
                               <p className="mt-1.5 max-w-[14rem] truncate text-xs text-gray-500">
-                                {[emp.designation, emp.department].filter(Boolean).join(" · ")}
+                                {[emp.designation, emp.department, emp.employment_type === "part_time" && "Part-time"].filter(Boolean).join(" · ")}
                               </p>
                             )}
                           </td>
@@ -323,9 +348,9 @@ function EmployeesPage() {
                           <p className="truncate text-xs text-gray-500">
                             <span className="font-semibold text-gray-600">{emp.employee_id}</span> · {emp.email}
                           </p>
-                          {(emp.designation || emp.department) && (
+                          {(emp.designation || emp.department || emp.employment_type === "part_time") && (
                             <p className="mt-0.5 truncate text-xs text-gray-500">
-                              {[emp.designation, emp.department].filter(Boolean).join(" · ")}
+                              {[emp.designation, emp.department, emp.employment_type === "part_time" && "Part-time"].filter(Boolean).join(" · ")}
                             </p>
                           )}
                         </div>

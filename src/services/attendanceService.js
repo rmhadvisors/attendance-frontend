@@ -46,6 +46,11 @@ export const removePaidLeave = async (id) => {
   return response.data
 }
 
+export const removePaidLeaveBulk = async (data) => {
+  const response = await api.post("/attendance/paid-leave/remove-bulk", data)
+  return response.data
+}
+
 export const getRegularizationQuota = async () => {
   const response = await api.get("/attendance/regularization-quota")
   return response.data

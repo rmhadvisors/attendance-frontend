@@ -1,4 +1,4 @@
-const CACHE_NAME = "rmh-attendance-pwa-v13"
+const CACHE_NAME = "rmh-attendance-pwa-v14"
 
 const APP_SHELL = [
   "/",

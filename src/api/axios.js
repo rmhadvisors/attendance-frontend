@@ -11,7 +11,10 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const isAuthCheck = error.config?.url?.includes("/auth/me")
+    const url = error.config?.url || ""
+    // /auth/me 401 is expected when logged out; /auth/login 401 is a wrong credential
+    // and must stay on the page so the error message remains visible.
+    const isAuthCheck = url.includes("/auth/me") || url.includes("/auth/login")
     if (error.response?.status === 401 && !isAuthCheck) {
       localStorage.removeItem("name")
       localStorage.removeItem("role")

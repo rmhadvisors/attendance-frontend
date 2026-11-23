@@ -3,6 +3,8 @@ import AdminLayout from "../layouts/AdminLayout"
 import api, { getApiErrorMessage } from "../api/axios"
 import ModalShell from "../components/ModalShell"
 import PayrollAdjustmentsModal from "../components/PayrollAdjustmentsModal"
+import PayslipModal from "../components/PayslipModal"
+import { downloadPdf } from "../utils/downloadPdf"
 
 const getISTComponents = () => {
   const options = {
@@ -84,6 +86,9 @@ export default function PayrollPage() {
   const [loading, setLoading] = useState(true)
   const [editingEmp, setEditingEmp] = useState(null)
   const [adjustingEmp, setAdjustingEmp] = useState(null)
+  // null = closed; { employee } = open (employee null -> pick one first)
+  const [payslipModal, setPayslipModal] = useState(null)
+  const [downloadingAll, setDownloadingAll] = useState(false)
   const [editingSalaryVal, setEditingSalaryVal] = useState("")
   const [savingSalary, setSavingSalary] = useState(false)
 
@@ -115,6 +120,21 @@ export default function PayrollPage() {
   useEffect(() => {
     fetchPayroll()
   }, [year, month])
+
+  const handleDownloadAll = async () => {
+    setDownloadingAll(true)
+    setError("")
+    try {
+      await downloadPdf(
+        `/payroll/payslips?year=${year}&month=${month}`,
+        `Payslips_${year}-${String(month).padStart(2, "0")}.pdf`
+      )
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Failed to download payslips"))
+    } finally {
+      setDownloadingAll(false)
+    }
+  }
 
   const handleEditSalaryClick = (emp) => {
     setEditingEmp(emp)
@@ -206,6 +226,22 @@ export default function PayrollPage() {
                 {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
             </div>
+            <button
+              type="button"
+              onClick={() => setPayslipModal({ employee: null })}
+              disabled={loading}
+              className="col-span-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm shadow-emerald-600/20 transition hover:bg-emerald-700 disabled:bg-emerald-300 sm:col-span-1"
+            >
+              Generate Payslip
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadAll}
+              disabled={downloadingAll || loading}
+              className="col-span-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50 sm:col-span-1"
+            >
+              {downloadingAll ? "Preparing…" : "Download all"}
+            </button>
           </div>
         </div>
 
@@ -387,6 +423,12 @@ export default function PayrollPage() {
 
                         <td className={`px-4 py-4 text-right text-base font-black ${rec.net_salary < 0 ? "text-red-600" : "text-emerald-700"}`}>
                           {formatINR(rec.net_salary)}
+                          <button
+                            onClick={() => setPayslipModal({ employee: rec })}
+                            className="mt-1.5 block w-full rounded-lg border border-gray-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+                          >
+                            Payslip
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -461,6 +503,12 @@ export default function PayrollPage() {
                       >
                         Add / Manage
                       </button>
+                      <button
+                        onClick={() => setPayslipModal({ employee: rec })}
+                        className="col-span-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-50"
+                      >
+                        Generate Payslip
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -478,6 +526,17 @@ export default function PayrollPage() {
           monthLabel={monthLabel}
           onClose={() => setAdjustingEmp(null)}
           onChanged={() => fetchPayroll({ silent: true })}
+        />
+      )}
+
+      {payslipModal && (
+        <PayslipModal
+          employees={allRecords}
+          initialEmployee={payslipModal.employee}
+          year={year}
+          month={month}
+          monthLabel={monthLabel}
+          onClose={() => setPayslipModal(null)}
         />
       )}
 

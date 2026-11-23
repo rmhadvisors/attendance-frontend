@@ -3,7 +3,7 @@ import AdminLayout from "../layouts/AdminLayout"
 import api, { getApiErrorMessage } from "../api/axios"
 import PaidLeaveModal from "../components/PaidLeaveModal"
 import Avatar from "../components/Avatar"
-import { getPaidLeaves, removePaidLeave } from "../services/attendanceService"
+import { getPaidLeaves, removePaidLeave, removePaidLeaveBulk } from "../services/attendanceService"
 
 function formatLeaveDate(value) {
   if (!value) return "-"
@@ -83,6 +83,9 @@ function LeaveRequestsPage() {
   const [paidLeaveNotice, setPaidLeaveNotice] = useState("")
   const [paidLeaves, setPaidLeaves] = useState([])
   const [paidLeavesError, setPaidLeavesError] = useState("")
+  const [bulkFrom, setBulkFrom] = useState("")
+  const [bulkTo, setBulkTo] = useState("")
+  const [bulkLoading, setBulkLoading] = useState(false)
 
   const fetchRequests = async () => {
     setLoading(true)
@@ -119,6 +122,28 @@ function LeaveRequestsPage() {
       setPaidLeaveNotice("Paid leave removed")
     } catch (err) {
       alert(getApiErrorMessage(err, "Failed to remove paid leave"))
+    }
+  }
+
+  const handleBulkRemove = async () => {
+    if (!bulkFrom || !bulkTo) {
+      alert("Select both dates")
+      return
+    }
+    if (bulkTo < bulkFrom) {
+      alert("End date cannot be before start date")
+      return
+    }
+    if (!window.confirm(`Remove ALL paid leave for ALL employees from ${formatLeaveDate(bulkFrom)} to ${formatLeaveDate(bulkTo)}? Those working days will count as absent again.`)) return
+    setBulkLoading(true)
+    try {
+      const res = await removePaidLeaveBulk({ start_date: bulkFrom, end_date: bulkTo })
+      setPaidLeaveNotice(res.message)
+      fetchPaidLeaves()
+    } catch (err) {
+      alert(getApiErrorMessage(err, "Failed to remove paid leaves"))
+    } finally {
+      setBulkLoading(false)
     }
   }
 
@@ -265,6 +290,25 @@ function LeaveRequestsPage() {
           </div>
 
           {paidLeavesError && <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{paidLeavesError}</p>}
+
+          <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="w-full text-xs font-bold uppercase tracking-wider text-gray-500">Remove paid leave for all employees</div>
+            <label className="text-xs font-semibold text-gray-500">
+              From
+              <input type="date" value={bulkFrom} onChange={(e) => { setBulkFrom(e.target.value); if (!bulkTo || bulkTo < e.target.value) setBulkTo(e.target.value) }} className="mt-1 block rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+            </label>
+            <label className="text-xs font-semibold text-gray-500">
+              To
+              <input type="date" value={bulkTo} min={bulkFrom} onChange={(e) => setBulkTo(e.target.value)} className="mt-1 block rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900" />
+            </label>
+            <button
+              onClick={handleBulkRemove}
+              disabled={bulkLoading}
+              className="rounded-lg bg-red-50 px-4 py-2 text-sm font-bold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+            >
+              {bulkLoading ? "Removing…" : "Remove for all"}
+            </button>
+          </div>
 
           {paidLeaves.length === 0 ? (
             <EmptyState title="No paid leaves given." hint="Use Give Paid Leave to add one." />

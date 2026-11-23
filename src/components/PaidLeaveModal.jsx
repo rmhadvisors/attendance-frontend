@@ -15,6 +15,7 @@ const ICONS = {
 }
 
 const REASON_MAX = 200
+const ALL_VALUE = "all"
 
 function todayIST() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -79,6 +80,7 @@ export default function PaidLeaveModal({ defaultDate, onClose, onGranted }) {
   }, [])
 
   const dayCount = useMemo(() => countDays(form.start_date, form.end_date), [form.start_date, form.end_date])
+  const isAll = form.user_id === ALL_VALUE
   const selectedEmployee = employees.find((emp) => emp.id === form.user_id)
 
   const setField = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))
@@ -102,10 +104,22 @@ export default function PaidLeaveModal({ defaultDate, onClose, onGranted }) {
       setError("End date cannot be before start date")
       return
     }
+    if (
+      isAll &&
+      !window.confirm(
+        `Give paid leave to ALL active employees from ${formatDate(form.start_date)} to ${formatDate(form.end_date)} (${dayCount} day${dayCount > 1 ? "s" : ""})?`
+      )
+    ) {
+      return
+    }
     setLoading(true)
     setError("")
     try {
-      const res = await givePaidLeave({ ...form, note: form.note.trim() || null })
+      const { user_id, ...rest } = form
+      const payload = isAll
+        ? { ...rest, all_employees: true }
+        : { ...rest, user_id }
+      const res = await givePaidLeave({ ...payload, note: form.note.trim() || null })
       setResult(res)
       onGranted?.(res)
     } catch (err) {
@@ -126,7 +140,7 @@ export default function PaidLeaveModal({ defaultDate, onClose, onGranted }) {
           <h3 className="text-lg font-bold">{result ? "Paid leave granted" : "Give Paid Leave"}</h3>
           <p className="truncate text-xs text-emerald-100">
             {result
-              ? `${result.message}${selectedEmployee ? ` for ${selectedEmployee.name}` : ""}`
+              ? `${result.message}${selectedEmployee && !isAll ? ` for ${selectedEmployee.name}` : ""}`
               : "Paid in full and not deducted from salary."}
           </p>
         </div>
@@ -204,12 +218,18 @@ export default function PaidLeaveModal({ defaultDate, onClose, onGranted }) {
                   className={inputClass}
                 >
                   <option value="">{loadingEmployees ? "Loading employees…" : "Choose an employee"}</option>
+                  <option value={ALL_VALUE}>All employees</option>
                   {employees.map((emp) => (
                     <option key={emp.id} value={emp.id}>
                       {emp.name} ({emp.employee_id})
                     </option>
                   ))}
                 </select>
+                {isAll && (
+                  <p className="mt-1.5 text-xs font-semibold text-amber-700">
+                    This gives paid leave to every active employee for the selected dates.
+                  </p>
+                )}
               </Field>
             </Section>
 
