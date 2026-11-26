@@ -15,6 +15,7 @@ import CompanySettingsPage from "./pages/CompanySettingsPage"
 import LeaveRequestsPage from "./pages/LeaveRequestsPage"
 import RegularizePage from "./pages/RegularizePage"
 import LocationsPage from "./pages/LocationsPage"
+import LettersPage from "./pages/LettersPage"
 
 // Employee pages
 import FaceEnrollPage from "./pages/employee/FaceEnrollPage"
@@ -187,6 +188,15 @@ function App() {
           element={
             <ProtectedRoute adminOnly>
               <RegularizePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/letters"
+          element={
+            <ProtectedRoute adminOnly>
+              <LettersPage />
             </ProtectedRoute>
           }
         />

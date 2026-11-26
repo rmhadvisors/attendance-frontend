@@ -2,8 +2,8 @@ import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 
-//const API_TARGET = "http://127.0.0.1:8000"
-const API_TARGET = "http://13.232.223.84:8000"
+const API_TARGET = "http://127.0.0.1:8000"
+//const API_TARGET = "http://13.232.223.84:8000"
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -22,6 +22,7 @@ export default defineConfig({
       "/leave/": { target: API_TARGET, changeOrigin: true },
       "/payroll": { target: API_TARGET, changeOrigin: true },
       "/push": { target: API_TARGET, changeOrigin: true },
+      "/letters/": { target: API_TARGET, changeOrigin: true },
     },
     // allowedHosts: [
     //   'falls-regularly-passive-combination.trycloudflare.com'
